@@ -18,6 +18,13 @@ To install it with the release name `my-release`, run this Helm command:
 ```console
 $ helm install --name my-release stable/prometheus-adapter
 ```
+=======
+Quick Links
+-----------
+
+- [Config walkthrough](docs/config-walkthrough.md) and [config reference](docs/config.md).
+- [End-to-end walkthrough](docs/walkthrough.md)
+- [Deployment info and files](deploy/README.md)
 
 Configuration
 -------------
