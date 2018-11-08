@@ -32,10 +32,10 @@ endif
 all: $(OUT_DIR)/$(ARCH)/adapter
 
 src_deps=$(shell find pkg cmd -type f -name "*.go")
-$(OUT_DIR)/%/adapter: vendor $(src_deps)
-	CGO_ENABLED=0 GOARCH=$* go build -tags netgo -o $(OUT_DIR)/$(ARCH)/adapter github.com/directxman12/k8s-prometheus-adapter/cmd/adapter
+$(OUT_DIR)/%/adapter: $(src_deps)
+	CGO_ENABLED=0 GOARCH=$* go build -tags netgo -o $(OUT_DIR)/$*/adapter github.com/directxman12/k8s-prometheus-adapter/cmd/adapter
 	
-docker-build: vendor
+docker-build:
 	cp deploy/Dockerfile $(TEMP_DIR)
 	cd $(TEMP_DIR) && sed -i "s|BASEIMAGE|$(BASEIMAGE)|g" Dockerfile
 
@@ -69,10 +69,10 @@ ifeq ($(VENDOR_DOCKERIZED),1)
 		curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh \
 		&& dep ensure -vendor-only"
 else
-	dep ensure -vendor-only
+	dep ensure -vendor-only -v
 endif
 
-test: vendor
+test:
 	CGO_ENABLED=0 go test ./pkg/...
 
 verify-gofmt:
