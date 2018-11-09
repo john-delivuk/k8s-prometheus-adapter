@@ -203,64 +203,72 @@ func (c *seriesConverter) QueryForSeries(series string, resource schema.GroupRes
 
 // ConvertersFromConfig produces a MetricNamer for each rule in the given config.
 func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]SeriesConverter, error) {
-	converters := make([]SeriesConverter, len(cfg.Rules))
-	for i, rule := range cfg.Rules {
-		var err error
+	// converters := make([]SeriesConverter, len(cfg.Rules) + len(cfg.ExternalRules))
+	var ( 
+		converters []SeriesConverter
+		err error
+	)
+	rules := {cfg.Rules, cfg.externalRules}
+	for _, rule := range cfg.Rules {
 
-		resourceConverter, err := NewResourceConverter(rule.Resources.Template, rule.Resources.Overrides, mapper)
+		converter, err = converterFromRule(rule, mapper)
 		if err != nil {
-			return nil, fmt.Errorf("unable to create ResourceConverter associated with series query %q: %v", rule.SeriesQuery, err)
+			return nil, err
 		}
-
-		queryBuilder, err := NewQueryBuilder(rule.MetricsQuery)
-		if err != nil {
-			return nil, fmt.Errorf("unable to create a QueryBuilder associated with series query %q: %v", rule.SeriesQuery, err)
-		}
-
-		seriesFilterer, err := NewSeriesFilterer(rule.SeriesFilters)
-		if err != nil {
-			return nil, fmt.Errorf("unable to create a SeriesFilter associated with series query %q: %v", rule.SeriesQuery, err)
-		}
-
-		if rule.Name.Matches != "" {
-			err := seriesFilterer.AddRequirement(config.RegexFilter{Is: rule.Name.Matches})
-			if err != nil {
-				return nil, fmt.Errorf("unable to apply the series name filter from name rules associated with series query %q: %v", rule.SeriesQuery, err)
-			}
-		}
-
-		metricNamer, err := NewMetricNamer(rule.Name)
-		if err != nil {
-			return nil, fmt.Errorf("unable to create a MetricNamer associated with series query %q: %v", rule.SeriesQuery, err)
-		}
-
-		namespaceLabel := ""
-		if rule.MetricType == config.External {
-			namespaceLabel = rule.ExternalMetricNamespaceLabelName
-		}
-
-		metricType := rule.MetricType
-		if metricType == config.MetricType("") {
-			metricType = config.Custom
-		}
-
-		converter := &seriesConverter{
-			seriesQuery: prom.Selector(rule.SeriesQuery),
-			mapper:      mapper,
-
-			resourceConverter:            resourceConverter,
-			queryBuilder:                 queryBuilder,
-			seriesFilterer:               seriesFilterer,
-			metricNamer:                  metricNamer,
-			metricType:                   metricType,
-			externalMetricNamespaceLabel: namespaceLabel,
-		}
-
-		converters[i] = converter
+		converters = append(converters, converter)
+	}
+	for _, rule := range cfg.ExternalRules {
+		con
 	}
 
 	return converters, nil
 }
+
+
+func converterFromRule(rule *DiscoveryRule, mapper apimeta.RESTMapper) (&seriesConverter, error) {
+	var err error
+
+	resourceConverter, err := NewResourceConverter(rule.Resources.Template, rule.Resources.Overrides, mapper)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create ResourceConverter associated with series query %q: %v", rule.SeriesQuery, err)
+	}
+	queryBuilder, err := NewQueryBuilder(rule.MetricsQuery)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create a QueryBuilder associated with series query %q: %v", rule.SeriesQuery, err)
+	}
+
+	seriesFilterer, err := NewSeriesFilterer(rule.SeriesFilters)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create a SeriesFilter associated with series query %q: %v", rule.SeriesQuery, err)
+	}
+
+	if rule.Name.Matches != "" {
+		err := seriesFilterer.AddRequirement(config.RegexFilter{Is: rule.Name.Matches})
+		if err != nil {
+			return nil, fmt.Errorf("unable to apply the series name filter from name rules associated with series query %q: %v", rule.SeriesQuery, err)
+		}
+	}
+
+	metricNamer, err := NewMetricNamer(rule.Name)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create a MetricNamer associated with series query %q: %v", rule.SeriesQuery, err)
+	}
+	metricType = config.Custom
+	namesSpaceLabel = ""
+	return &seriesConverter{
+		seriesQuery: prom.Selector(rule.SeriesQuery),
+		mapper:      mapper,
+
+		resourceConverter:            resourceConverter,
+		queryBuilder:                 queryBuilder,
+		seriesFilterer:               seriesFilterer,
+		metricNamer:                  metricNamer,
+		metricType:                   metricType,
+		externalMetricNamespaceLabel: namespaceLabel,
+	}, nil
+}
+
+
 
 func (c *seriesConverter) buildNamespaceQueryPartForExternalSeries(namespace string) (queryPart, error) {
 	return queryPart{
