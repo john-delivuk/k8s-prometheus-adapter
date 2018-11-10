@@ -9,8 +9,9 @@ type MetricsDiscoveryConfig struct {
 	// custom metrics API resources.  The rules are applied independently,
 	// and thus must be mutually exclusive.  Rules will the same SeriesQuery
 	// will make only a single API call.
-	Rules         []DiscoveryRule `yaml:"rules"`
-	ResourceRules *ResourceRules  `yaml:"resourceRules,omitempty"`
+	Rules         	[]DiscoveryRule 		`yaml:"rules"`
+	ResourceRules 	*ResourceRules  		`yaml:"resourceRules,omitempty"`
+	ExternalRules   []ExternalDiscoveryRule	`yaml:"externalRules,omitempty"`
 }
 
 // DiscoveryRule describes on set of rules for transforming Prometheus metrics to/from
@@ -37,13 +38,13 @@ type DiscoveryRule struct {
 	// `.GroupBy` is the comma-separated expected group-by label names. The delimeters
 	// are `<<` and `>>`.
 	MetricsQuery string `yaml:"metricsQuery,omitempty"`
-	// MetricType identifies whether the metrics derived from this rule should be classified
-	// as external or custom metrics.
-	MetricType MetricType `yaml:"metricType,omitempty"`
-	// ExternalMetricNamespaceLabelName identifies what Prometheus label should be examined
-	// to apply a namespace to metrics created from this rule.
+}
+
+type ExternalDiscoveryRule struct {
+	DiscoveryRule DiscoveryRule `yaml:"rule"`
 	ExternalMetricNamespaceLabelName string `yaml:"externalMetricNamespaceLabelName,omitempty"`
 }
+
 
 // RegexFilter is a filter that matches positively or negatively against a regex.
 // Only one field may be set at a time.
