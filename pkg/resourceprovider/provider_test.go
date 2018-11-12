@@ -29,9 +29,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/metrics/pkg/apis/metrics"
 
-	config "github.com/directxman12/k8s-prometheus-adapter/cmd/config-gen/utils"
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
-	fakeprom "github.com/directxman12/k8s-prometheus-adapter/pkg/client/fake"
+	config "github.com/john-delivuk/k8s-prometheus-adapter/cmd/config-gen/utils"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
+	fakeprom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client/fake"
 	pmodel "github.com/prometheus/common/model"
 )
 

@@ -22,9 +22,8 @@ import (
 	"github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/provider"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
-	"github.com/directxman12/k8s-prometheus-adapter/pkg/config"
 	"github.com/golang/glog"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
 	pmodel "github.com/prometheus/common/model"
 )
 
@@ -91,13 +90,9 @@ func (r *basicSeriesRegistry) filterMetrics(result MetricUpdateResult) MetricUpd
 	converters := make([]SeriesConverter, 0)
 	series := make([][]prom.Series, 0)
 
-	targetType := config.Custom
-
 	for i, converter := range result.converters {
-		if converter.MetricType() == targetType {
-			converters = append(converters, converter)
-			series = append(series, result.series[i])
-		}
+		converters = append(converters, converter)
+		series = append(series, result.series[i])
 	}
 
 	return MetricUpdateResult{

@@ -5,7 +5,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/selection"
 
-	"github.com/directxman12/k8s-prometheus-adapter/pkg/client"
+	"github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
 	"github.com/stretchr/testify/require"
 )
 

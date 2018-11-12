@@ -8,8 +8,7 @@ import (
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/labels"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
-	"github.com/directxman12/k8s-prometheus-adapter/pkg/config"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
 )
 
 // ExternalSeriesRegistry acts as the top-level converter for transforming Kubernetes requests
@@ -48,27 +47,7 @@ func NewExternalSeriesRegistry(lister MetricListerWithNotification, mapper apime
 	return &registry
 }
 
-func (r *externalSeriesRegistry) filterMetrics(result MetricUpdateResult) MetricUpdateResult {
-	converters := make([]SeriesConverter, 0)
-	series := make([][]prom.Series, 0)
-
-	targetType := config.External
-
-	for i, converter := range result.converters {
-		if converter.MetricType() == targetType {
-			converters = append(converters, converter)
-			series = append(series, result.series[i])
-		}
-	}
-
-	return MetricUpdateResult{
-		converters: converters,
-		series:     series,
-	}
-}
-
 func (r *externalSeriesRegistry) filterAndStoreMetrics(result MetricUpdateResult) {
-	result = r.filterMetrics(result)
 
 	newSeriesSlices := result.series
 	converters := result.converters

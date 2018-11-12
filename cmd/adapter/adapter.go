@@ -33,11 +33,11 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
-	mprom "github.com/directxman12/k8s-prometheus-adapter/pkg/client/metrics"
-	adaptercfg "github.com/directxman12/k8s-prometheus-adapter/pkg/config"
-	cmprov "github.com/directxman12/k8s-prometheus-adapter/pkg/custom-provider"
-	resprov "github.com/directxman12/k8s-prometheus-adapter/pkg/resourceprovider"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
+	mprom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client/metrics"
+	adaptercfg "github.com/john-delivuk/k8s-prometheus-adapter/pkg/config"
+	cmprov "github.com/john-delivuk/k8s-prometheus-adapter/pkg/custom-provider"
+	resprov "github.com/john-delivuk/k8s-prometheus-adapter/pkg/resourceprovider"
 )
 
 type PrometheusAdapter struct {

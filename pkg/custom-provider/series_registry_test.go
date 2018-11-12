@@ -29,8 +29,8 @@ import (
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	config "github.com/directxman12/k8s-prometheus-adapter/cmd/config-gen/utils"
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
+	config "github.com/john-delivuk/k8s-prometheus-adapter/cmd/config-gen/utils"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
 )
 
 // restMapper creates a RESTMapper with just the types we need for
@@ -116,7 +116,6 @@ var seriesRegistryTestSeries = [][]prom.Series{
 	},
 }
 
-<<<<<<< HEAD
 func TestSeriesRegistry(t *testing.T) {
 	assert := assert.New(t)
 
@@ -302,7 +301,6 @@ type metricInfoSorter []provider.CustomMetricInfo
 
 func (s metricInfoSorter) Len() int {
 	return len(s)
-=======
 type regTestCase struct {
 	title         string
 	info          provider.CustomMetricInfo
@@ -310,7 +308,6 @@ type regTestCase struct {
 	resourceNames []string
 
 	expectedQuery string
->>>>>>> 5a461c3fcd780e4d0c412fbbce817df699bfcc65
 }
 
 var _ = Describe("Series Registry", func() {

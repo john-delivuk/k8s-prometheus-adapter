@@ -34,7 +34,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/metrics/pkg/apis/custom_metrics"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
 )
 
 type prometheusProvider struct {

@@ -24,7 +24,7 @@ import (
 	"github.com/golang/glog"
 	pmodel "github.com/prometheus/common/model"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
 )
 
 // Runnable represents something that can be run until told to stop.

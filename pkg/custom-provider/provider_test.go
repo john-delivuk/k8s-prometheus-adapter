@@ -17,17 +17,20 @@ limitations under the License.
 package provider
 
 import (
+	"sort"
+	"testing"
 	"time"
 
 	"github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/provider"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	fakedyn "k8s.io/client-go/dynamic/fake"
 
-	config "github.com/directxman12/k8s-prometheus-adapter/cmd/config-gen/utils"
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
-	fakeprom "github.com/directxman12/k8s-prometheus-adapter/pkg/client/fake"
+	config "github.com/john-delivuk/k8s-prometheus-adapter/cmd/config-gen/utils"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
+	fakeprom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client/fake"
 	pmodel "github.com/prometheus/common/model"
 )
 
@@ -75,7 +78,6 @@ func setupPrometheusProvider() (provider.CustomMetricsProvider, *fakeprom.FakePr
 	return prov, fakeProm
 }
 
-<<<<<<< HEAD
 func TestListAllMetrics(t *testing.T) {
 	// setup
 	prov, fakeProm := setupPrometheusProvider(t)
@@ -90,7 +92,6 @@ func TestListAllMetrics(t *testing.T) {
 	// update the metrics (without actually calling RunUntil, so we can avoid timing issues)
 	lister := prov.(*prometheusProvider).SeriesRegistry.(*basicSeriesRegistry).metricLister.(*periodicMetricLister)
 
-	// lister := prov.(*prometheusProvider).SeriesRegistry.(*basicSeriesRegistry).metricLister.(*periodicMetricLister).realLister.(*basicMetricLister)
 	require.NoError(t, lister.updateMetrics())
 
 	// list/sort the metrics
@@ -114,7 +115,7 @@ func TestListAllMetrics(t *testing.T) {
 	// assert that we got what we expected
 	assert.Equal(t, expectedMetrics, actualMetrics)
 }
-=======
+
 var _ = Describe("Custom Metrics Provider", func() {
 	It("should be able to list all metrics", func() {
 		By("setting up the provider")
@@ -147,4 +148,3 @@ var _ = Describe("Custom Metrics Provider", func() {
 		))
 	})
 })
->>>>>>> 5a461c3fcd780e4d0c412fbbce817df699bfcc65

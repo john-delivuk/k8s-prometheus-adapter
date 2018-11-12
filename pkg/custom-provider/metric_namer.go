@@ -3,16 +3,24 @@ package provider
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
-	"github.com/directxman12/k8s-prometheus-adapter/pkg/config"
-	"github.com/directxman12/k8s-prometheus-adapter/pkg/naming"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
+	"github.com/john-delivuk/k8s-prometheus-adapter/pkg/config"
+	"github.com/john-delivuk/k8s-prometheus-adapter/pkg/naming"
 )
 
-// MetricNamer provides functions for naming custom metrics from Promethes series.
+var nsGroupResource = schema.GroupResource{Resource: "namespaces"}
+var groupNameSanitizer = strings.NewReplacer(".", "_", "-", "_")
+
+// MetricNamer knows how to convert Prometheus series names and label names to
+// metrics API resources, and vice-versa.  MetricNamers should be safe to access
+// concurrently.  Returned group-resources are "normalized" as per the
+// MetricInfo#Normalized method.  Group-resources passed as arguments must
+// themselves be normalized.
 type MetricNamer interface {
 	// Selector produces the appropriate Prometheus series selector to match all
 	// series handlable by this namer.
@@ -107,12 +115,12 @@ func (n *metricNamer) QueryForSeries(series string, resource schema.GroupResourc
 	return n.metricsQuery.Build(series, resource, namespace, nil, names...)
 }
 
-func (c *metricNamer) GetMetricNameForSeries(series prom.Series) (string, error) {
-	matches := c.nameMatches.FindStringSubmatchIndex(series.Name)
+func (n *metricNamer) MetricNameForSeries(series prom.Series) (string, error) {
+	matches := n.nameMatches.FindStringSubmatchIndex(series.Name)
 	if matches == nil {
-		return "", fmt.Errorf("series name %q did not match expected pattern %q", series.Name, c.nameMatches.String())
+		return "", fmt.Errorf("series name %q did not match expected pattern %q", series.Name, n.nameMatches.String())
 	}
-	outNameBytes := c.nameMatches.ExpandString(nil, c.nameAs, series.Name, matches)
+	outNameBytes := n.nameMatches.ExpandString(nil, n.nameAs, series.Name, matches)
 	return string(outNameBytes), nil
 }
 

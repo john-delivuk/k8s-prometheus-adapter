@@ -1,18 +1,14 @@
 package provider
 
 import (
-	"fmt"
-
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/selection"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
-	"github.com/directxman12/k8s-prometheus-adapter/pkg/config"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
+	"github.com/john-delivuk/k8s-prometheus-adapter/pkg/config"
 )
-
-var nsGroupResource = schema.GroupResource{Resource: "namespaces"}
 
 // SeriesConverter knows how to convert Prometheus series names and label names to
 // metrics API resources, and vice-versa.  SeriesConverters should be safe to access
@@ -37,7 +33,6 @@ type SeriesConverter interface {
 	QueryForSeries(series string, resource schema.GroupResource, namespace string, names ...string) (prom.Selector, error)
 	QueryForExternalSeries(namespace string, series string, metricSelector labels.Selector) (prom.Selector, error)
 	IdentifySeries(series prom.Series) (seriesIdentity, error)
-	MetricType() config.MetricType
 	ExternalMetricNamespaceLabelName() string
 }
 
@@ -60,7 +55,6 @@ type seriesConverter struct {
 	metricNamer       MetricNamer
 	mapper            apimeta.RESTMapper
 
-	metricType                   config.MetricType
 	externalMetricNamespaceLabel string
 }
 
@@ -71,10 +65,6 @@ type queryTemplateArgs struct {
 	LabelValuesByName map[string][]string
 	GroupBy           string
 	GroupBySlice      []string
-}
-
-func (c *seriesConverter) MetricType() config.MetricType {
-	return c.metricType
 }
 
 func (c *seriesConverter) ExternalMetricNamespaceLabelName() string {
@@ -202,36 +192,29 @@ func (c *seriesConverter) QueryForSeries(series string, resource schema.GroupRes
 }
 
 // ConvertersFromConfig produces a MetricNamer for each rule in the given config.
-func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]SeriesConverter, error) {
-	// converters := make([]SeriesConverter, len(cfg.Rules) + len(cfg.ExternalRules))
-	var ( 
-		converters []SeriesConverter
-		err error
-	)
-	rules := {cfg.Rules, cfg.externalRules}
-	for _, rule := range cfg.Rules {
-
-		converter, err = converterFromRule(rule, mapper)
+func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]MetricNamer, error) {
+	converters := make(config.DiscoveryRule, len(cfg.ExternalRules))
+	for i, rule := range cfg.ExternalRules {
+		converter, err := rule.DiscoveryRule
 		if err != nil {
 			return nil, err
 		}
-		converters = append(converters, converter)
+		converters[i] = converter
 	}
-	for _, rule := range cfg.ExternalRules {
-		con
-	}
-
-	return converters, nil
+	metricNamer, err := NamersFromConfig(converters, mapper)
+	return metricNamer, nil
+	//	return converters, nil
 }
 
-
-func converterFromRule(rule *DiscoveryRule, mapper apimeta.RESTMapper) (&seriesConverter, error) {
+/*
+func converterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, namespaceLabel string) (SeriesConverter, error) {
 	var err error
 
 	resourceConverter, err := NewResourceConverter(rule.Resources.Template, rule.Resources.Overrides, mapper)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create ResourceConverter associated with series query %q: %v", rule.SeriesQuery, err)
 	}
+
 	queryBuilder, err := NewQueryBuilder(rule.MetricsQuery)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create a QueryBuilder associated with series query %q: %v", rule.SeriesQuery, err)
@@ -249,13 +232,12 @@ func converterFromRule(rule *DiscoveryRule, mapper apimeta.RESTMapper) (&seriesC
 		}
 	}
 
-	metricNamer, err := NewMetricNamer(rule.Name)
+	metricNamer, err := NamersFromConfig(cfg.ExternalRules, mapper)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create a MetricNamer associated with series query %q: %v", rule.SeriesQuery, err)
 	}
-	metricType = config.Custom
-	namesSpaceLabel = ""
-	return &seriesConverter{
+
+	converter := &seriesConverter{
 		seriesQuery: prom.Selector(rule.SeriesQuery),
 		mapper:      mapper,
 
@@ -263,13 +245,11 @@ func converterFromRule(rule *DiscoveryRule, mapper apimeta.RESTMapper) (&seriesC
 		queryBuilder:                 queryBuilder,
 		seriesFilterer:               seriesFilterer,
 		metricNamer:                  metricNamer,
-		metricType:                   metricType,
 		externalMetricNamespaceLabel: namespaceLabel,
-	}, nil
+	}
+	return converter, nil
 }
-
-
-
+*/
 func (c *seriesConverter) buildNamespaceQueryPartForExternalSeries(namespace string) (queryPart, error) {
 	return queryPart{
 		labelName: c.externalMetricNamespaceLabel,

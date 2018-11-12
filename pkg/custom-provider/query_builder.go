@@ -9,7 +9,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/selection"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
 )
 
 // QueryBuilder provides functions for generating Prometheus queries.

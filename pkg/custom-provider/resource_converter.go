@@ -3,16 +3,15 @@ package provider
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"sync"
 	"text/template"
 
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	prom "github.com/directxman12/k8s-prometheus-adapter/pkg/client"
-	"github.com/directxman12/k8s-prometheus-adapter/pkg/config"
 	"github.com/golang/glog"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
+	"github.com/john-delivuk/k8s-prometheus-adapter/pkg/config"
 	"github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/provider"
 	pmodel "github.com/prometheus/common/model"
 )
@@ -99,8 +98,6 @@ func (r *resourceConverter) LabelForResource(resource schema.GroupResource) (pmo
 	}
 	return lbl, nil
 }
-
-var groupNameSanitizer = strings.NewReplacer(".", "_", "-", "_")
 
 // makeLabelForResource constructs a label name for the given resource, and saves the result.
 // It must *not* be called under an existing lock.
