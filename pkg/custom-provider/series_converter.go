@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"fmt"
+
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -74,7 +76,7 @@ func (c *seriesConverter) ExternalMetricNamespaceLabelName() string {
 func (c *seriesConverter) IdentifySeries(series prom.Series) (seriesIdentity, error) {
 	// TODO: warn if it doesn't match any resources
 	resources, namespaced := c.resourceConverter.ResourcesForSeries(series)
-	name, err := c.metricNamer.GetMetricNameForSeries(series)
+	name, err := c.metricNamer.MetricNameForSeries(series)
 
 	result := seriesIdentity{
 		resources:  resources,
@@ -192,21 +194,27 @@ func (c *seriesConverter) QueryForSeries(series string, resource schema.GroupRes
 }
 
 // ConvertersFromConfig produces a MetricNamer for each rule in the given config.
-func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]MetricNamer, error) {
-	converters := make(config.DiscoveryRule, len(cfg.ExternalRules))
-	for i, rule := range cfg.ExternalRules {
-		converter, err := rule.DiscoveryRule
+func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]SeriesConverter, error) {
+
+	var converters []SeriesConverter
+	for _, rule := range cfg.Rules {
+		converter, err := converterFromRule(rule, mapper, "")
 		if err != nil {
 			return nil, err
 		}
-		converters[i] = converter
+		converters = append(converters, converter)
 	}
-	metricNamer, err := NamersFromConfig(converters, mapper)
-	return metricNamer, nil
-	//	return converters, nil
+
+	for _, rule := range cfg.ExternalRules {
+		converter, err := converterFromRule(rule.DiscoveryRule, mapper, rule.ExternalMetricNamespaceLabelName)
+		if err != nil {
+			return nil, err
+		}
+		converters = append(converters, converter)
+	}
+	return converters, nil
 }
 
-/*
 func converterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, namespaceLabel string) (SeriesConverter, error) {
 	var err error
 
@@ -232,7 +240,7 @@ func converterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, nam
 		}
 	}
 
-	metricNamer, err := NamersFromConfig(cfg.ExternalRules, mapper)
+	metricNamer, err := NewMetricNamer(rule.Name)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create a MetricNamer associated with series query %q: %v", rule.SeriesQuery, err)
 	}
@@ -249,7 +257,7 @@ func converterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, nam
 	}
 	return converter, nil
 }
-*/
+
 func (c *seriesConverter) buildNamespaceQueryPartForExternalSeries(namespace string) (queryPart, error) {
 	return queryPart{
 		labelName: c.externalMetricNamespaceLabel,

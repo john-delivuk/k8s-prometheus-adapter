@@ -27,13 +27,13 @@ type externalPrometheusProvider struct {
 }
 
 // NewExternalPrometheusProvider creates an ExternalMetricsProvider capable of responding to Kubernetes requests for external metric data.
-func NewExternalPrometheusProvider(seriesRegistry ExternalSeriesRegistry, promClient prom.Client, converter MetricConverter) provider.ExternalMetricsProvider {
-	return &externalPrometheusProvider{
-		promClient:      promClient,
-		seriesRegistry:  seriesRegistry,
-		metricConverter: converter,
-	}
-}
+//func NewExternalPrometheusProvider(seriesRegistry ExternalSeriesRegistry, promClient prom.Client, converter MetricConverter) provider.ExternalMetricsProvider {
+//	return &externalPrometheusProvider{
+//		promClient:      promClient,
+//		seriesRegistry:  seriesRegistry,
+//		metricConverter: converter,
+//	}
+//}
 
 func (p *externalPrometheusProvider) GetExternalMetric(namespace string, metricName string, metricSelector labels.Selector) (*external_metrics.ExternalMetricValueList, error) {
 	selector, found, err := p.seriesRegistry.QueryForMetric(namespace, metricName, metricSelector)

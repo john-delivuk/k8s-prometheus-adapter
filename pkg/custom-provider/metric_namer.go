@@ -194,3 +194,38 @@ func NamersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMap
 
 	return namers, nil
 }
+
+// NewMetricNamer creates a MetricNamer capable of translating Prometheus series names
+// into custom metric names.
+func NewMetricNamer(mapping config.NameMapping) (MetricNamer, error) {
+	var nameMatches *regexp.Regexp
+	var err error
+	if mapping.Matches != "" {
+		nameMatches, err = regexp.Compile(mapping.Matches)
+		if err != nil {
+			return nil, fmt.Errorf("unable to compile series name match expression %q: %v", mapping.Matches, err)
+		}
+	} else {
+		// this will always succeed
+		nameMatches = regexp.MustCompile(".*")
+	}
+	nameAs := mapping.As
+	if nameAs == "" {
+		// check if we have an obvious default
+		subexpNames := nameMatches.SubexpNames()
+		if len(subexpNames) == 1 {
+			// no capture groups, use the whole thing
+			nameAs = "$0"
+		} else if len(subexpNames) == 2 {
+			// one capture group, use that
+			nameAs = "$1"
+		} else {
+			return nil, fmt.Errorf("must specify an 'as' value for name matcher %q", mapping.Matches)
+		}
+	}
+
+	return &metricNamer{
+		nameMatches: nameMatches,
+		nameAs:      nameAs,
+	}, nil
+}
