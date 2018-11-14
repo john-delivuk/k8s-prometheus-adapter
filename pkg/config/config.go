@@ -40,9 +40,18 @@ type DiscoveryRule struct {
 	MetricsQuery string `yaml:"metricsQuery,omitempty"`
 }
 
+//externalrules:
+//- Name:
+//  SeriesQuery:
+//  Resources:
+//  ExternalMetricNamespaceLabelName
+//- Name:
+//  SeriesQuery:
+//  Resources:
+//  ExternalMetricNamespaceLabelName
 type ExternalDiscoveryRule struct {
-	DiscoveryRule                    DiscoveryRule `yaml:"rule"`
-	ExternalMetricNamespaceLabelName string        `yaml:"externalMetricNamespaceLabelName,omitempty"`
+	DiscoveryRule
+	ExternalMetricNamespaceLabelName string `yaml:"externalMetricNamespaceLabelName,omitempty"`
 }
 
 // RegexFilter is a filter that matches positively or negatively against a regex.
@@ -112,3 +121,15 @@ type ResourceRule struct {
 	// (since "container" is not a resource, this can't go in the `resources` block, but is similar).
 	ContainerLabel string `yaml:"containerLabel"`
 }
+
+// MetricType identifies whether a given metric should be handled and interpreted as a Custom or External metric.
+type MetricType string
+
+// Operator represents a key/field's relationship to value(s).
+// See labels.Requirement and fields.Requirement for more details.
+type Operator string
+
+const (
+	External MetricType = "External"
+	Custom   MetricType = "Custom"
+)

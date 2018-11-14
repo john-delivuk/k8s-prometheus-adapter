@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
@@ -122,77 +121,6 @@ func (n *metricNamer) MetricNameForSeries(series prom.Series) (string, error) {
 	}
 	outNameBytes := n.nameMatches.ExpandString(nil, n.nameAs, series.Name, matches)
 	return string(outNameBytes), nil
-}
-
-// NamersFromConfig produces a MetricNamer for each rule in the given config.
-func NamersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]MetricNamer, error) {
-	namers := make([]MetricNamer, len(cfg.Rules))
-
-	for i, rule := range cfg.Rules {
-		resConv, err := naming.NewResourceConverter(rule.Resources.Template, rule.Resources.Overrides, mapper)
-		if err != nil {
-			return nil, err
-		}
-
-		metricsQuery, err := naming.NewMetricsQuery(rule.MetricsQuery, resConv)
-		if err != nil {
-			return nil, fmt.Errorf("unable to construct metrics query associated with series query %q: %v", rule.SeriesQuery, err)
-		}
-
-		seriesMatchers := make([]*reMatcher, len(rule.SeriesFilters))
-		for i, filterRaw := range rule.SeriesFilters {
-			matcher, err := newReMatcher(filterRaw)
-			if err != nil {
-				return nil, fmt.Errorf("unable to generate series name filter associated with series query %q: %v", rule.SeriesQuery, err)
-			}
-			seriesMatchers[i] = matcher
-		}
-		if rule.Name.Matches != "" {
-			matcher, err := newReMatcher(config.RegexFilter{Is: rule.Name.Matches})
-			if err != nil {
-				return nil, fmt.Errorf("unable to generate series name filter from name rules associated with series query %q: %v", rule.SeriesQuery, err)
-			}
-			seriesMatchers = append(seriesMatchers, matcher)
-		}
-
-		var nameMatches *regexp.Regexp
-		if rule.Name.Matches != "" {
-			nameMatches, err = regexp.Compile(rule.Name.Matches)
-			if err != nil {
-				return nil, fmt.Errorf("unable to compile series name match expression %q associated with series query %q: %v", rule.Name.Matches, rule.SeriesQuery, err)
-			}
-		} else {
-			// this will always succeed
-			nameMatches = regexp.MustCompile(".*")
-		}
-		nameAs := rule.Name.As
-		if nameAs == "" {
-			// check if we have an obvious default
-			subexpNames := nameMatches.SubexpNames()
-			if len(subexpNames) == 1 {
-				// no capture groups, use the whole thing
-				nameAs = "$0"
-			} else if len(subexpNames) == 2 {
-				// one capture group, use that
-				nameAs = "$1"
-			} else {
-				return nil, fmt.Errorf("must specify an 'as' value for name matcher %q associated with series query %q", rule.Name.Matches, rule.SeriesQuery)
-			}
-		}
-
-		namer := &metricNamer{
-			seriesQuery:       prom.Selector(rule.SeriesQuery),
-			metricsQuery:      metricsQuery,
-			nameMatches:       nameMatches,
-			nameAs:            nameAs,
-			seriesMatchers:    seriesMatchers,
-			ResourceConverter: resConv,
-		}
-
-		namers[i] = namer
-	}
-
-	return namers, nil
 }
 
 // NewMetricNamer creates a MetricNamer capable of translating Prometheus series names
