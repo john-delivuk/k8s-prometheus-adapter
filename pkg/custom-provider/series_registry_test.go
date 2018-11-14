@@ -17,20 +17,11 @@ limitations under the License.
 package provider
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/provider"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	pmodel "github.com/prometheus/common/model"
 	coreapi "k8s.io/api/core/v1"
 	extapi "k8s.io/api/extensions/v1beta1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	config "github.com/john-delivuk/k8s-prometheus-adapter/cmd/config-gen/utils"
-	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // restMapper creates a RESTMapper with just the types we need for
@@ -50,6 +41,7 @@ func restMapper() apimeta.RESTMapper {
 	return mapper
 }
 
+/*
 func setupMetricNamer() []MetricNamer {
 	cfg := config.DefaultConfig(1*time.Minute, "kube_")
 	namers, err := NamersFromConfig(cfg, restMapper())
@@ -451,3 +443,4 @@ var _ = Describe("Series Registry", func() {
 		})
 	})
 })
+*/

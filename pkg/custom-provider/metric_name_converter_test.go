@@ -73,7 +73,7 @@ func runTest(t *testing.T, mapping config.NameMapping, input string, expectedRes
 		Name: input,
 	}
 
-	actualResult, err := converter.GetMetricNameForSeries(series)
+	actualResult, err := converter.MetricNameForSeries(series)
 	require.NoError(t, err)
 
 	require.Equal(t, expectedResult, actualResult)

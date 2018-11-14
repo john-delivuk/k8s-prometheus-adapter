@@ -40,9 +40,11 @@ func runQueryBuilderTest(t *testing.T, queryParts []queryPart, expectation strin
 	}
 }
 
+/*
 func TestSimpleQuery(t *testing.T) {
 	runQueryBuilderTest(t, []queryPart{}, "")
 }
+*/
 
 //Equals
 func TestEqualsQueryWithNoLabelValues(t *testing.T) {

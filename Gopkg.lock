@@ -87,6 +87,18 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:c0e78e3d2674135fe1715192c426893ced265e7a626dcbcd9732b43742104bfc"
+  name = "github.com/directxman12/k8s-prometheus-adapter"
+  packages = [
+    "cmd/config-gen/utils",
+    "pkg/client",
+    "pkg/config",
+  ]
+  pruneopts = "UT"
+  revision = "5a461c3fcd780e4d0c412fbbce817df699bfcc65"
+  version = "v0.3.0"
+
+[[projects]]
   digest = "1:f4f6279cb37479954644babd8f8ef00584ff9fa63555d2c6718c1c3517170202"
   name = "github.com/elazarl/go-bindata-assetfs"
   packages = ["."]
@@ -432,6 +444,14 @@
   version = "v2.0.1"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  pruneopts = "UT"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:b6221ec0f8903b556e127c449e7106b63e6867170c2d10a7c058623d086f2081"
   name = "github.com/prometheus/client_golang"
   packages = ["prometheus"]
@@ -487,6 +507,17 @@
   pruneopts = "UT"
   revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
   version = "v1.0.2"
+
+[[projects]]
+  digest = "1:c40d65817cdd41fac9aa7af8bed56927bb2d6d47e4fea566a74880f5c2b1c41e"
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require",
+  ]
+  pruneopts = "UT"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   digest = "1:03aa6e485e528acb119fb32901cf99582c380225fc7d5a02758e08b180cb56c3"
@@ -1028,8 +1059,8 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "14918e76a061ac7466e9c6fa723afb8a0c888021c78e6a75c8275d5205e2bb60"
   input-imports = [
+    "github.com/directxman12/k8s-prometheus-adapter/cmd/config-gen/utils",
     "github.com/golang/glog",
     "github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/cmd",
     "github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/provider",
@@ -1041,6 +1072,7 @@
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/common/model",
     "github.com/spf13/cobra",
+    "github.com/stretchr/testify/require",
     "gopkg.in/yaml.v2",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
@@ -1050,6 +1082,7 @@
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime/schema",
+    "k8s.io/apimachinery/pkg/selection",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/wait",
@@ -1059,6 +1092,7 @@
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/metrics/pkg/apis/custom_metrics",
+    "k8s.io/metrics/pkg/apis/external_metrics",
     "k8s.io/metrics/pkg/apis/metrics",
   ]
   solver-name = "gps-cdcl"
