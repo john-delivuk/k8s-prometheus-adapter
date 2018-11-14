@@ -123,9 +123,9 @@ func (n *queryBuilder) selectMatcher(operator selection.Operator, values []strin
 	if numValues == 0 {
 		switch operator {
 		case selection.Exists:
-			return prom.LabelMatches, nil
+			return prom.LabelNeq, nil
 		case selection.DoesNotExist:
-			return prom.LabelNotMatches, nil
+			return prom.LabelEq, nil
 		case selection.Equals, selection.DoubleEquals, selection.NotEquals, selection.In, selection.NotIn:
 			return nil, NewOperatorRequiresValuesError()
 		}
@@ -160,12 +160,12 @@ func (n *queryBuilder) selectTargetValue(operator selection.Operator, values []s
 	if numValues == 0 {
 		switch operator {
 		case selection.Exists, selection.DoesNotExist:
-			// Regex for any non-empty string.
+			// Return an empty string when values are equal to 0
 			// When the operator is LabelNotMatches this will select series without the label
 			// or with the label but a value of "".
 			// When the operator is LabelMatches this will select series with the label
 			// whose value is NOT "".
-			return ".+", nil
+			return "", nil
 		case selection.Equals, selection.DoubleEquals, selection.NotEquals, selection.In, selection.NotIn:
 			return "", NewOperatorRequiresValuesError()
 		}
