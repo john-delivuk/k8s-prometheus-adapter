@@ -201,12 +201,12 @@ func (c *seriesConverter) QueryForSeries(series string, resource schema.GroupRes
 }
 
 // ConvertersFromConfig produces a MetricNamer for each rule in the given config.
-func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]SeriesConverter, error) {
+func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]seriesConverter, error) {
 	var (
-		converters []SeriesConverter
+		converters []seriesConverter
 		err        error
-		customConverter SeriesConverter
-		externalConverter SeriesConverter
+		customConverter seriesConverter
+		externalConverter seriesConverter
 	)
 
 	for _, rule := range cfg.Rules {
