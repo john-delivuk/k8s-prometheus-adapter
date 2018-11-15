@@ -205,36 +205,35 @@ func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RES
 	var (
 		converters []SeriesConverter
 		err        error
+		customConverter SeriesConverter
+		externalConverter SeriesConverter
 	)
 
 	for _, rule := range cfg.Rules {
 
-		customConverter, err := converterFromRule(&rule, mapper)
-		if err != nil {
+		customConverter, err = converterFromRule(&rule, mapper, "", config.Custom); if err != nil {
 			return nil, err
 		}
-		customConverter.externalMetricNamespaceLabel = ""
-		customConverter.MetricType = config.Custom
-		converters = append(converters, *customConverter)
+		converters = append(converters, customConverter)
 	}
 	for _, rule := range cfg.ExternalRules {
-		externalConverter, err := converterFromRule(&rule, mapper)
-		if err != nil {
+		externalConverter, err = converterFromRule(&rule, mapper, rule.ExternalMetricNamespaceLabelName, config.External); if err != nil {
 			return nil, err
 		}
-		externalConverter.externalMetricNamespaceLabel = rule.ExternalMetricNamespaceLabelName
-		externalConverter.MetricType = config.External
-		converters = append(converters, *externalConverter)
+		converters = append(converters, externalConverter)
 	}
 
 	return converters, nil
 }
 
-func converterFromRule(rule *config.DiscoveryRule, mapper apimeta.RESTMapper) (*SeriesConverter, error) {
+func converterFromRule(a interface{}, mapper apimeta.RESTMapper, namespaceLabel string, metricType config.MetricType) (*seriesConverter, error) {
 	var (
 		err error
 	)
-
+	rule, ok := a.(config.DiscoveryRule)
+	if ! ok {
+		return nil, fmt.Errorf("unable to cast arguemnt as type DiscoveryRule")
+	}
 	resourceConverter, err := naming.NewResourceConverter(rule.Resources.Template, rule.Resources.Overrides, mapper)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create ResourceConverter associated with series query %q: %v", rule.SeriesQuery, err)
@@ -266,13 +265,12 @@ func converterFromRule(rule *config.DiscoveryRule, mapper apimeta.RESTMapper) (*
 	return &seriesConverter{
 		seriesQuery: prom.Selector(rule.SeriesQuery),
 		mapper:      mapper,
-
 		resourceConverter: resourceConverter,
 		queryBuilder:      queryBuilder,
 		seriesFilterer:    seriesFilterer,
 		metricNamer:       metricNamer,
-		//	metricType:                   metricType,
-		//	externalMetricNamespaceLabel: namespaceLabel,
+		metricType:                   metricType,
+		externalMetricNamespaceLabel: namespaceLabel,
 	}, nil
 }
 
