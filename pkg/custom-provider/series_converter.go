@@ -205,8 +205,8 @@ func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RES
 	var (
 		converters []seriesConverter
 		err        error
-		customConverter seriesConverter
-		externalConverter seriesConverter
+		customConverter *seriesConverter
+		externalConverter *seriesConverter
 	)
 
 	for _, rule := range cfg.Rules {
@@ -214,13 +214,13 @@ func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RES
 		customConverter, err = converterFromRule(&rule, mapper, "", config.Custom); if err != nil {
 			return nil, err
 		}
-		converters = append(converters, customConverter)
+		converters = append(converters, *customConverter)
 	}
 	for _, rule := range cfg.ExternalRules {
 		externalConverter, err = converterFromRule(&rule, mapper, rule.ExternalMetricNamespaceLabelName, config.External); if err != nil {
 			return nil, err
 		}
-		converters = append(converters, externalConverter)
+		converters = append(converters, *externalConverter)
 	}
 
 	return converters, nil
