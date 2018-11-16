@@ -52,8 +52,8 @@ func restMapper() apimeta.RESTMapper {
 
 func setupMetricNamer() []SeriesConverter {
 	cfg := config.DefaultConfig(1*time.Minute, "kube_")
-	converters, err := ConvertersFromConfig(cfg, restMapper())
-	Expect(err).NotTo(HaveOccurred())
+	converters, errs := ConvertersFromConfig(cfg, restMapper())
+	Expect(errs).Should(BeEmpty())
 	return converters
 }
 

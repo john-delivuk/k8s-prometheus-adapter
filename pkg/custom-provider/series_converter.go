@@ -201,34 +201,29 @@ func (c *seriesConverter) QueryForSeries(series string, resource schema.GroupRes
 }
 
 // ConvertersFromConfig produces a MetricNamer for each rule in the given config.
-func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]SeriesConverter, error) {
-	var (
-		converters        []SeriesConverter
-		err               error
-		customConverter   SeriesConverter
-		externalConverter SeriesConverter
-	)
+func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]SeriesConverter, []error) {
+	errs := []error{}
+	converters := []SeriesConverter{}
 
 	for _, rule := range cfg.Rules {
-		customConverter, err = converterFromRule(rule, mapper, "", config.Custom)
-		if err != nil {
-			return nil, err
+		if customConverter, err := converterFromRule(rule, mapper, "", config.Custom); err == nil {
+			converters = append(converters, customConverter)
+		} else {
+			errs = append(errs, err)
 		}
-		converters = append(converters, customConverter)
 	}
 
 	for _, rule := range cfg.ExternalRules {
-		converterFromRule(rule.DiscoveryRule, mapper, rule.ExternalMetricNamespaceLabelName, config.External)
-		if err != nil {
-			return nil, err
+		if externalConverter, err := converterFromRule(rule.DiscoveryRule, mapper, rule.ExternalMetricNamespaceLabelName, config.External); err == nil {
+			converters = append(converters, externalConverter)
+		} else {
+			errs = append(errs, err)
 		}
-		converters = append(converters, externalConverter)
 	}
-
-	return converters, nil
+	return converters, errs
 }
 
-func converterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, namespaceLabel string, metricType config.MetricType) (*seriesConverter, error) {
+func converterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, namespaceLabel string, metricType config.MetricType) (SeriesConverter, error) {
 	var (
 		err error
 	)

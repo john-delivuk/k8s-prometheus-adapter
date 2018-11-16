@@ -38,8 +38,8 @@ func setupPrometheusProvider() (provider.CustomMetricsProvider, *fakeprom.FakePr
 	fakeKubeClient := &fakedyn.FakeDynamicClient{}
 
 	cfg := config.DefaultConfig(1*time.Minute, "")
-	converters, err := ConvertersFromConfig(cfg, restMapper())
-	Expect(err).NotTo(HaveOccurred())
+	converters, errs := ConvertersFromConfig(cfg, restMapper())
+	Expect(errs).Should(BeEmpty())
 
 	prov, _ := NewPrometheusProvider(restMapper(), fakeKubeClient, fakeProm, converters, fakeProviderUpdateInterval)
 

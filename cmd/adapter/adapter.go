@@ -115,9 +115,9 @@ func (cmd *PrometheusAdapter) makeProvider(promClient prom.Client, stopCh <-chan
 		return nil, fmt.Errorf("unable to construct Kubernetes client: %v", err)
 	}
 
-	converters, err := cmprov.ConvertersFromConfig(cmd.metricsConfig, mapper)
-	if err != nil {
-		return nil, fmt.Errorf("unable to construct naming scheme from metrics rules: %v", err)
+	converters, errs := cmprov.ConvertersFromConfig(cmd.metricsConfig, mapper)
+	if len(errs) > 0 {
+		return nil, fmt.Errorf("unable to construct naming scheme from metrics rules: %v", errs)
 	}
 
 	// construct the provider and start it
