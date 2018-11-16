@@ -209,7 +209,7 @@ func TestExistsQueryWithNoLabelValues(t *testing.T) {
 			values:    []string{},
 			operator:  selection.Exists,
 		},
-	}, "rate(my_series{target_label=~\".+\"}[2m])")
+	}, "rate(my_series{target_label!=\"\"}[2m])")
 }
 
 func TestExistsQueryWithOneLabelValue(t *testing.T) {
@@ -240,7 +240,7 @@ func TestDoesNotExistsQueryWithNoLabelValues(t *testing.T) {
 			values:    []string{},
 			operator:  selection.DoesNotExist,
 		},
-	}, "rate(my_series{target_label!~\".+\"}[2m])")
+	}, "rate(my_series{target_label=\"\"}[2m])")
 }
 
 func TestDoesNotExistsQueryWithOneLabelValue(t *testing.T) {

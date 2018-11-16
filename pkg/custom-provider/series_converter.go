@@ -201,26 +201,28 @@ func (c *seriesConverter) QueryForSeries(series string, resource schema.GroupRes
 }
 
 // ConvertersFromConfig produces a MetricNamer for each rule in the given config.
-func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]seriesConverter, error) {
+func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RESTMapper) ([]SeriesConverter, error) {
 	var (
-		converters []seriesConverter
-		err        error
-		customConverter *seriesConverter
-		externalConverter *seriesConverter
+		converters        []SeriesConverter
+		err               error
+		customConverter   SeriesConverter
+		externalConverter SeriesConverter
 	)
 
 	for _, rule := range cfg.Rules {
 
-		customConverter, err = converterFromRule(&rule, mapper, "", config.Custom); if err != nil {
+		customConverter, err = converterFromRule(&rule, mapper, "", config.Custom)
+		if err != nil {
 			return nil, err
 		}
-		converters = append(converters, *customConverter)
+		converters = append(converters, customConverter)
 	}
 	for _, rule := range cfg.ExternalRules {
-		externalConverter, err = converterFromRule(&rule, mapper, rule.ExternalMetricNamespaceLabelName, config.External); if err != nil {
+		externalConverter, err = converterFromRule(&rule, mapper, rule.ExternalMetricNamespaceLabelName, config.External)
+		if err != nil {
 			return nil, err
 		}
-		converters = append(converters, *externalConverter)
+		converters = append(converters, externalConverter)
 	}
 
 	return converters, nil
@@ -231,7 +233,7 @@ func converterFromRule(a interface{}, mapper apimeta.RESTMapper, namespaceLabel 
 		err error
 	)
 	rule, ok := a.(config.DiscoveryRule)
-	if ! ok {
+	if !ok {
 		return nil, fmt.Errorf("unable to cast arguemnt as type DiscoveryRule")
 	}
 	resourceConverter, err := naming.NewResourceConverter(rule.Resources.Template, rule.Resources.Overrides, mapper)
@@ -260,15 +262,14 @@ func converterFromRule(a interface{}, mapper apimeta.RESTMapper, namespaceLabel 
 	if err != nil {
 		return nil, fmt.Errorf("unable to create a MetricNamer associated with series query %q: %v", rule.SeriesQuery, err)
 	}
-	//metricType = config.Custom
-	//namesSpaceLabel = ""
+
 	return &seriesConverter{
-		seriesQuery: prom.Selector(rule.SeriesQuery),
-		mapper:      mapper,
-		resourceConverter: resourceConverter,
-		queryBuilder:      queryBuilder,
-		seriesFilterer:    seriesFilterer,
-		metricNamer:       metricNamer,
+		seriesQuery:                  prom.Selector(rule.SeriesQuery),
+		mapper:                       mapper,
+		resourceConverter:            resourceConverter,
+		queryBuilder:                 queryBuilder,
+		seriesFilterer:               seriesFilterer,
+		metricNamer:                  metricNamer,
 		metricType:                   metricType,
 		externalMetricNamespaceLabel: namespaceLabel,
 	}, nil

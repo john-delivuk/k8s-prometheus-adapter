@@ -17,11 +17,20 @@ limitations under the License.
 package provider
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/provider"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	pmodel "github.com/prometheus/common/model"
 	coreapi "k8s.io/api/core/v1"
 	extapi "k8s.io/api/extensions/v1beta1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
-
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	config "github.com/john-delivuk/k8s-prometheus-adapter/cmd/config-gen/utils"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
 )
 
 // restMapper creates a RESTMapper with just the types we need for
@@ -41,12 +50,11 @@ func restMapper() apimeta.RESTMapper {
 	return mapper
 }
 
-/*
-func setupMetricNamer() []MetricNamer {
+func setupMetricNamer() []SeriesConverter {
 	cfg := config.DefaultConfig(1*time.Minute, "kube_")
-	namers, err := NamersFromConfig(cfg, restMapper())
+	converters, err := ConvertersFromConfig(cfg, restMapper())
 	Expect(err).NotTo(HaveOccurred())
-	return namers
+	return converters
 }
 
 var seriesRegistryTestSeries = [][]prom.Series{
@@ -108,191 +116,6 @@ var seriesRegistryTestSeries = [][]prom.Series{
 	},
 }
 
-func TestSeriesRegistry(t *testing.T) {
-	assert := assert.New(t)
-
-	converters := setupMetricNamer(t)
-	registry := &basicSeriesRegistry{
-		mapper: restMapper(),
-	}
-
-	updateResult := MetricUpdateResult{
-		series:     seriesRegistryTestSeries,
-		converters: converters,
-	}
-
-	// set up the registry
-	registry.filterAndStoreMetrics(updateResult)
-
-	// make sure each metric got registered and can form queries
-	testCases := []struct {
-		title         string
-		info          provider.CustomMetricInfo
-		namespace     string
-		resourceNames []string
-
-		expectedQuery string
-	}{
-		// container metrics
-		{
-			title:         "container metrics gauge / multiple resource names",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "pods"}, true, "some_usage"},
-			namespace:     "somens",
-			resourceNames: []string{"somepod1", "somepod2"},
-
-			expectedQuery: "sum(container_some_usage{namespace=\"somens\",pod_name=~\"somepod1|somepod2\",container_name!=\"POD\"}) by (pod_name)",
-		},
-		{
-			title:         "container metrics counter",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "pods"}, true, "some_count"},
-			namespace:     "somens",
-			resourceNames: []string{"somepod1", "somepod2"},
-
-			expectedQuery: "sum(rate(container_some_count_total{namespace=\"somens\",pod_name=~\"somepod1|somepod2\",container_name!=\"POD\"}[1m])) by (pod_name)",
-		},
-		{
-			title:         "container metrics seconds counter",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "pods"}, true, "some_time"},
-			namespace:     "somens",
-			resourceNames: []string{"somepod1", "somepod2"},
-
-			expectedQuery: "sum(rate(container_some_time_seconds_total{namespace=\"somens\",pod_name=~\"somepod1|somepod2\",container_name!=\"POD\"}[1m])) by (pod_name)",
-		},
-		// namespaced metrics
-		{
-			title:         "namespaced metrics counter / multidimensional (service)",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "service"}, true, "ingress_hits"},
-			namespace:     "somens",
-			resourceNames: []string{"somesvc"},
-
-			expectedQuery: "sum(rate(ingress_hits_total{kube_namespace=\"somens\",kube_service=\"somesvc\"}[1m])) by (kube_service)",
-		},
-		{
-			title:         "namespaced metrics counter / multidimensional (ingress)",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Group: "extensions", Resource: "ingress"}, true, "ingress_hits"},
-			namespace:     "somens",
-			resourceNames: []string{"someingress"},
-
-			expectedQuery: "sum(rate(ingress_hits_total{kube_namespace=\"somens\",kube_ingress=\"someingress\"}[1m])) by (kube_ingress)",
-		},
-		{
-			title:         "namespaced metrics counter / multidimensional (pod)",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "pod"}, true, "ingress_hits"},
-			namespace:     "somens",
-			resourceNames: []string{"somepod"},
-
-			expectedQuery: "sum(rate(ingress_hits_total{kube_namespace=\"somens\",kube_pod=\"somepod\"}[1m])) by (kube_pod)",
-		},
-		{
-			title:         "namespaced metrics gauge",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "service"}, true, "service_proxy_packets"},
-			namespace:     "somens",
-			resourceNames: []string{"somesvc"},
-
-			expectedQuery: "sum(service_proxy_packets{kube_namespace=\"somens\",kube_service=\"somesvc\"}) by (kube_service)",
-		},
-		{
-			title:         "namespaced metrics seconds counter",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Group: "extensions", Resource: "deployment"}, true, "work_queue_wait"},
-			namespace:     "somens",
-			resourceNames: []string{"somedep"},
-
-			expectedQuery: "sum(rate(work_queue_wait_seconds_total{kube_namespace=\"somens\",kube_deployment=\"somedep\"}[1m])) by (kube_deployment)",
-		},
-		// non-namespaced series
-		{
-			title:         "root scoped metrics gauge",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "node"}, false, "node_gigawatts"},
-			resourceNames: []string{"somenode"},
-
-			expectedQuery: "sum(node_gigawatts{kube_node=\"somenode\"}) by (kube_node)",
-		},
-		{
-			title:         "root scoped metrics counter",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "persistentvolume"}, false, "volume_claims"},
-			resourceNames: []string{"somepv"},
-
-			expectedQuery: "sum(rate(volume_claims_total{kube_persistentvolume=\"somepv\"}[1m])) by (kube_persistentvolume)",
-		},
-		{
-			title:         "root scoped metrics seconds counter",
-			info:          provider.CustomMetricInfo{schema.GroupResource{Resource: "node"}, false, "node_fan"},
-			resourceNames: []string{"somenode"},
-
-			expectedQuery: "sum(rate(node_fan_seconds_total{kube_node=\"somenode\"}[1m])) by (kube_node)",
-		},
-	}
-
-	for _, testCase := range testCases {
-		outputQuery, found := registry.QueryForMetric(testCase.info, testCase.namespace, testCase.resourceNames...)
-		if !assert.True(found, "%s: metric %v should available", testCase.title, testCase.info) {
-			continue
-		}
-
-		assert.Equal(prom.Selector(testCase.expectedQuery), outputQuery, "%s: metric %v should have produced the correct query for %v in namespace %s", testCase.title, testCase.info, testCase.resourceNames, testCase.namespace)
-	}
-
-	allMetrics := registry.ListAllMetrics()
-	expectedMetrics := []provider.CustomMetricInfo{
-		{schema.GroupResource{Resource: "pods"}, true, "some_count"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "some_count"},
-		{schema.GroupResource{Resource: "pods"}, true, "some_time"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "some_time"},
-		{schema.GroupResource{Resource: "pods"}, true, "some_usage"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "some_usage"},
-		{schema.GroupResource{Resource: "services"}, true, "ingress_hits"},
-		{schema.GroupResource{Group: "extensions", Resource: "ingresses"}, true, "ingress_hits"},
-		{schema.GroupResource{Resource: "pods"}, true, "ingress_hits"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "ingress_hits"},
-		{schema.GroupResource{Resource: "services"}, true, "service_proxy_packets"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "service_proxy_packets"},
-		{schema.GroupResource{Group: "extensions", Resource: "deployments"}, true, "work_queue_wait"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "work_queue_wait"},
-		{schema.GroupResource{Resource: "nodes"}, false, "node_gigawatts"},
-		{schema.GroupResource{Resource: "persistentvolumes"}, false, "volume_claims"},
-		{schema.GroupResource{Resource: "nodes"}, false, "node_fan"},
-	}
-
-	// sort both for easy comparison
-	sort.Sort(metricInfoSorter(allMetrics))
-	sort.Sort(metricInfoSorter(expectedMetrics))
-
-	assert.Equal(expectedMetrics, allMetrics, "should have listed all expected metrics")
-}
-
-func BenchmarkSetSeries(b *testing.B) {
-	converters := setupMetricNamer(b)
-	registry := &basicSeriesRegistry{
-		mapper: restMapper(),
-	}
-
-	numDuplicates := 10000
-	newSeriesSlices := make([][]prom.Series, len(seriesRegistryTestSeries))
-	for i, seriesSlice := range seriesRegistryTestSeries {
-		newSlice := make([]prom.Series, len(seriesSlice)*numDuplicates)
-		for j, series := range seriesSlice {
-			for k := 0; k < numDuplicates; k++ {
-				newSlice[j*numDuplicates+k] = series
-			}
-		}
-		newSeriesSlices[i] = newSlice
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		updateResult := MetricUpdateResult{
-			series:     newSeriesSlices,
-			converters: converters,
-		}
-		registry.filterAndStoreMetrics(updateResult)
-	}
-}
-
-// metricInfoSorter is a sort.Interface for sorting provider.CustomMetricInfos
-type metricInfoSorter []provider.CustomMetricInfo
-
-func (s metricInfoSorter) Len() int {
-	return len(s)
 type regTestCase struct {
 	title         string
 	info          provider.CustomMetricInfo
@@ -308,11 +131,15 @@ var _ = Describe("Series Registry", func() {
 	)
 
 	BeforeEach(func() {
-		namers := setupMetricNamer()
+		converters := setupMetricNamer()
 		registry = &basicSeriesRegistry{
 			mapper: restMapper(),
 		}
-		Expect(registry.SetSeries(seriesRegistryTestSeries, namers)).To(Succeed())
+		updateResult := MetricUpdateResult{
+			series:     seriesRegistryTestSeries,
+			converters: converters,
+		}
+		registry.filterAndStoreMetrics(updateResult)
 	})
 
 	Context("with the default configuration rules", func() {
@@ -411,7 +238,7 @@ var _ = Describe("Series Registry", func() {
 		for _, tc := range testCases {
 			tc := tc // copy to avoid iteration variable issues
 			It(fmt.Sprintf("should build a query for %s", tc.title), func() {
-				By(fmt.Sprintf("composing the query for the %s metric on %v in namespace %s", tc.info, tc.resourceNames, tc.namespace))
+				By(fmt.Sprintf("composing the query for the %s metric on %v in namespace %s", tc.info, tc.namespace, tc.resourceNames))
 				outputQuery, found := registry.QueryForMetric(tc.info, tc.namespace, tc.resourceNames...)
 				Expect(found).To(BeTrue(), "metric %s should be available", tc.info)
 
@@ -443,4 +270,3 @@ var _ = Describe("Series Registry", func() {
 		})
 	})
 })
-*/

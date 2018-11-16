@@ -18,20 +18,30 @@ package provider
 
 import (
 	"time"
+
+	"github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/provider"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	fakedyn "k8s.io/client-go/dynamic/fake"
+
+	config "github.com/john-delivuk/k8s-prometheus-adapter/cmd/config-gen/utils"
+	prom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client"
+	fakeprom "github.com/john-delivuk/k8s-prometheus-adapter/pkg/client/fake"
+	pmodel "github.com/prometheus/common/model"
 )
 
 const fakeProviderUpdateInterval = 2 * time.Second
 
-/*
 func setupPrometheusProvider() (provider.CustomMetricsProvider, *fakeprom.FakePrometheusClient) {
 	fakeProm := &fakeprom.FakePrometheusClient{}
 	fakeKubeClient := &fakedyn.FakeDynamicClient{}
 
 	cfg := config.DefaultConfig(1*time.Minute, "")
-	namers, err := NamersFromConfig(cfg, restMapper())
+	converters, err := ConvertersFromConfig(cfg, restMapper())
 	Expect(err).NotTo(HaveOccurred())
 
-	// prov, _ := NewPrometheusProvider(restMapper(), fakeKubeClient, fakeProm, converters, fakeProviderUpdateInterval)
+	prov, _ := NewPrometheusProvider(restMapper(), fakeKubeClient, fakeProm, converters, fakeProviderUpdateInterval)
 
 	containerSel := prom.MatchSeries("", prom.NameMatches("^container_.*"), prom.LabelNeq("container_name", "POD"), prom.LabelNeq("namespace", ""), prom.LabelNeq("pod_name", ""))
 	namespacedSel := prom.MatchSeries("", prom.LabelNeq("namespace", ""), prom.NameNotMatches("^container_.*"))
@@ -62,45 +72,7 @@ func setupPrometheusProvider() (provider.CustomMetricsProvider, *fakeprom.FakePr
 		},
 	}
 
-	return nil, fakeProm
-}
-
-func TestListAllMetrics(t *testing.T) {
-	// setup
-	prov, fakeProm := setupPrometheusProvider()
-
-	// assume we have no updates
-	require.Len(t, prov.ListAllMetrics(), 0, "assume: should have no metrics updates at the start")
-
-	// set the acceptible interval (now until the next update, with a bit of wiggle room)
-	startTime := pmodel.Now().Add(-1*fakeProviderUpdateInterval - fakeProviderUpdateInterval/10)
-	fakeProm = pmodel.Interval{Start: startTime, End: 0}
-
-	// update the metrics (without actually calling RunUntil, so we can avoid timing issues)
-	lister := prov.(*prometheusProvider).SeriesRegistry.(*basicSeriesRegistry).metricLister.(*periodicMetricLister)
-
-	require.NoError(t, lister.updateMetrics())
-
-	// list/sort the metrics
-	actualMetrics := prov.ListAllMetrics()
-	sort.Sort(metricInfoSorter(actualMetrics))
-
-	expectedMetrics := []provider.CustomMetricInfo{
-		{schema.GroupResource{Resource: "services"}, true, "ingress_hits"},
-		{schema.GroupResource{Group: "extensions", Resource: "ingresses"}, true, "ingress_hits"},
-		{schema.GroupResource{Resource: "pods"}, true, "ingress_hits"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "ingress_hits"},
-		{schema.GroupResource{Resource: "services"}, true, "service_proxy_packets"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "service_proxy_packets"},
-		{schema.GroupResource{Group: "extensions", Resource: "deployments"}, true, "work_queue_wait"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "work_queue_wait"},
-		{schema.GroupResource{Resource: "namespaces"}, false, "some_usage"},
-		{schema.GroupResource{Resource: "pods"}, true, "some_usage"},
-	}
-	sort.Sort(metricInfoSorter(expectedMetrics))
-
-	// assert that we got what we expected
-	assert.Equal(t, expectedMetrics, actualMetrics)
+	return prov, fakeProm
 }
 
 var _ = Describe("Custom Metrics Provider", func() {
@@ -117,7 +89,7 @@ var _ = Describe("Custom Metrics Provider", func() {
 
 		By("updating the list of available metrics")
 		// don't call RunUntil to avoid timing issue
-		lister := prov.(*prometheusProvider).SeriesRegistry.(*cachingMetricsLister)
+		lister := prov.(*prometheusProvider).SeriesRegistry.(*basicSeriesRegistry).metricLister.(*periodicMetricLister)
 		Expect(lister.updateMetrics()).To(Succeed())
 
 		By("listing all metrics, and checking that they contain the expected results")
@@ -135,4 +107,3 @@ var _ = Describe("Custom Metrics Provider", func() {
 		))
 	})
 })
-*/
