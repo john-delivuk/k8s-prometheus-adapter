@@ -210,15 +210,15 @@ func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RES
 	)
 
 	for _, rule := range cfg.Rules {
-
-		customConverter, err = converterFromRule(&rule, mapper, "", config.Custom)
+		customConverter, err = converterFromRule(rule, mapper, "", config.Custom)
 		if err != nil {
 			return nil, err
 		}
 		converters = append(converters, customConverter)
 	}
+
 	for _, rule := range cfg.ExternalRules {
-		externalConverter, err = converterFromRule(&rule, mapper, rule.ExternalMetricNamespaceLabelName, config.External)
+		converterFromRule(rule.DiscoveryRule, mapper, rule.ExternalMetricNamespaceLabelName, config.External)
 		if err != nil {
 			return nil, err
 		}
@@ -228,14 +228,11 @@ func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RES
 	return converters, nil
 }
 
-func converterFromRule(a interface{}, mapper apimeta.RESTMapper, namespaceLabel string, metricType config.MetricType) (*seriesConverter, error) {
+func converterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, namespaceLabel string, metricType config.MetricType) (*seriesConverter, error) {
 	var (
 		err error
 	)
-	rule, ok := a.(config.DiscoveryRule)
-	if !ok {
-		return nil, fmt.Errorf("unable to cast arguemnt as type DiscoveryRule")
-	}
+
 	resourceConverter, err := naming.NewResourceConverter(rule.Resources.Template, rule.Resources.Overrides, mapper)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create ResourceConverter associated with series query %q: %v", rule.SeriesQuery, err)
