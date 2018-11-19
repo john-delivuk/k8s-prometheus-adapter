@@ -26,17 +26,10 @@ type externalPrometheusProvider struct {
 	seriesRegistry ExternalSeriesRegistry
 }
 
-// NewExternalPrometheusProvider creates an ExternalMetricsProvider capable of responding to Kubernetes requests for external metric data.
-//func NewExternalPrometheusProvider(seriesRegistry ExternalSeriesRegistry, promClient prom.Client, converter MetricConverter) provider.ExternalMetricsProvider {
-//	return &externalPrometheusProvider{
-//		promClient:      promClient,
-//		seriesRegistry:  seriesRegistry,
-//		metricConverter: converter,
-//	}
-//}
+// NewExternalPrometheusProvider creates an ExternalMetricsProvider capable of responding to Kubernetes requests for external metric data
 
-func (p *externalPrometheusProvider) GetExternalMetric(namespace string, metricName string, metricSelector labels.Selector) (*external_metrics.ExternalMetricValueList, error) {
-	selector, found, err := p.seriesRegistry.QueryForMetric(namespace, metricName, metricSelector)
+func (p *externalPrometheusProvider) GetExternalMetric(namespace string, metricSelector labels.Selector, info provider.ExternalMetricInfo) (*external_metrics.ExternalMetricValueList, error) {
+	selector, found, err := p.seriesRegistry.QueryForMetric(namespace, info.Metric, metricSelector)
 
 	if err != nil {
 		glog.Errorf("unable to generate a query for the metric: %v", err)
@@ -44,7 +37,7 @@ func (p *externalPrometheusProvider) GetExternalMetric(namespace string, metricN
 	}
 
 	if !found {
-		return nil, provider.NewMetricNotFoundError(p.selectGroupResource(namespace), metricName)
+		return nil, provider.NewMetricNotFoundError(p.selectGroupResource(namespace), info.Metric)
 	}
 
 	queryResults, err := p.promClient.Query(context.TODO(), pmodel.Now(), selector)
@@ -70,5 +63,14 @@ func (p *externalPrometheusProvider) selectGroupResource(namespace string) schem
 	return schema.GroupResource{
 		Group:    "",
 		Resource: "",
+	}
+}
+
+
+func NewExternalPrometheusProvider(seriesRegistry ExternalSeriesRegistry, promClient prom.Client, converter MetricConverter) provider.ExternalMetricsProvider {
+	return &externalPrometheusProvider{
+		promClient:      promClient,
+		seriesRegistry:  seriesRegistry,
+		metricConverter: converter,
 	}
 }
