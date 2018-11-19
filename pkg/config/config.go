@@ -40,17 +40,8 @@ type DiscoveryRule struct {
 	MetricsQuery string `yaml:"metricsQuery,omitempty"`
 }
 
-//externalrules:
-//- Name:
-//  SeriesQuery:
-//  Resources:
-//  ExternalMetricNamespaceLabelName
-//- Name:
-//  SeriesQuery:
-//  Resources:
-//  ExternalMetricNamespaceLabelName
 type ExternalDiscoveryRule struct {
-	DiscoveryRule
+	DiscoveryRule                    `yaml:",inline"`
 	ExternalMetricNamespaceLabelName string `yaml:"externalMetricNamespaceLabelName,omitempty"`
 }
 
