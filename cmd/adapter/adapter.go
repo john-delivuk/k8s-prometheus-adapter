@@ -127,6 +127,37 @@ func (cmd *PrometheusAdapter) makeProvider(promClient prom.Client, stopCh <-chan
 	return cmProvider, nil
 }
 
+func (cmd *PrometheusAdapter) makeExternalProvider(promClient prom.Client, stopCh <-chan struct{}) (provider.ExternalMetricsProvider, error) {
+	if len(cmd.metricsConfig.ExternalRules) == 0 {
+		return nil, nil
+	}
+
+	// grab the mapper and dynamic client
+	mapper, err := cmd.RESTMapper()
+	if err != nil {
+		return nil, fmt.Errorf("unable to construct RESTMapper: %v", err)
+	}
+	/*
+		dynClient, err := cmd.DynamicClient()
+		if err != nil {
+			return nil, fmt.Errorf("unable to construct Kubernetes client: %v", err)
+		}
+	*/
+	var converters []cmprov.SeriesConverter
+	for i, rule := range cmd.metricsConfig.ExternalRules {
+		converter, err := cmprov.ConverterFromRule(rule.DiscoveryRule, mapper, cmd.metricsConfig.ExternalRules[i].ExternalMetricNamespaceLabelName, "External")
+		if err != nil {
+			return nil, err
+		}
+		converters = append(converters, converter)
+	}
+	// construct the provider and start it
+	emProvider, runner := cmprov.NewExternalPrometheusProvider(mapper, promClient, converters, cmd.MetricsRelistInterval)
+	runner.RunUntil(stopCh)
+
+	return emProvider, nil
+}
+
 func (cmd *PrometheusAdapter) addResourceMetricsAPI(promClient prom.Client) error {
 	if cmd.metricsConfig.ResourceRules == nil {
 		// bail if we don't have rules for setting things up
@@ -198,6 +229,17 @@ func main() {
 	// attach the provider to the server, if it's needed
 	if cmProvider != nil {
 		cmd.WithCustomMetrics(cmProvider)
+	}
+
+	// construct the external metrics provider
+	emProvider, err := cmd.makeExternalProvider(promClient, wait.NeverStop)
+	if err != nil {
+		glog.Fatalf("unable to construct external metrics provider: %v", err)
+	}
+
+	// attach the provider to the server, if it's needed
+	if emProvider != nil {
+		cmd.WithExternalMetrics(emProvider)
 	}
 
 	// attach resource metrics support, if it's needed

@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/kubernetes-incubator/custom-metrics-apiserver/pkg/provider"
 
 	apierr "k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 
@@ -66,11 +68,14 @@ func (p *externalPrometheusProvider) selectGroupResource(namespace string) schem
 	}
 }
 
-
-func NewExternalPrometheusProvider(seriesRegistry ExternalSeriesRegistry, promClient prom.Client, converter MetricConverter) provider.ExternalMetricsProvider {
+func NewExternalPrometheusProvider(mapper apimeta.RESTMapper, promClient prom.Client, converters []SeriesConverter, updateInterval time.Duration) (provider.ExternalMetricsProvider, Runnable) {
+	metricConverter := NewMetricConverter()
+	basicLister := NewBasicMetricLister(promClient, converters, updateInterval)
+	periodicLister, _ := NewPeriodicMetricLister(basicLister, updateInterval)
+	seriesRegistry := NewExternalSeriesRegistry(periodicLister, mapper)
 	return &externalPrometheusProvider{
 		promClient:      promClient,
 		seriesRegistry:  seriesRegistry,
-		metricConverter: converter,
-	}
+		metricConverter: metricConverter,
+	}, periodicLister
 }

@@ -206,24 +206,24 @@ func ConvertersFromConfig(cfg *config.MetricsDiscoveryConfig, mapper apimeta.RES
 	converters := []SeriesConverter{}
 
 	for _, rule := range cfg.Rules {
-		if customConverter, err := converterFromRule(rule, mapper, "", config.Custom); err == nil {
+		if customConverter, err := ConverterFromRule(rule, mapper, "", config.Custom); err == nil {
 			converters = append(converters, customConverter)
 		} else {
 			errs = append(errs, err)
 		}
 	}
 
-	for _, rule := range cfg.ExternalRules {
-		if externalConverter, err := converterFromRule(rule.DiscoveryRule, mapper, rule.ExternalMetricNamespaceLabelName, config.External); err == nil {
-			converters = append(converters, externalConverter)
-		} else {
-			errs = append(errs, err)
-		}
-	}
+	// for _, rule := range cfg.ExternalRules {
+	// 	if externalConverter, err := ConverterFromRule(rule.DiscoveryRule, mapper, rule.ExternalMetricNamespaceLabelName, config.External); err == nil {
+	// 		converters = append(converters, externalConverter)
+	// 	} else {
+	// 		errs = append(errs, err)
+	// 	}
+	// }
 	return converters, errs
 }
 
-func converterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, namespaceLabel string, metricType config.MetricType) (SeriesConverter, error) {
+func ConverterFromRule(rule config.DiscoveryRule, mapper apimeta.RESTMapper, namespaceLabel string, metricType config.MetricType) (SeriesConverter, error) {
 	var (
 		err error
 	)
