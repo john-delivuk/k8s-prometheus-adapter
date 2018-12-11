@@ -37,7 +37,7 @@ import (
 	mprom "github.com/directxman12/k8s-prometheus-adapter/pkg/client/metrics"
 	adaptercfg "github.com/directxman12/k8s-prometheus-adapter/pkg/config"
 	cmprov "github.com/directxman12/k8s-prometheus-adapter/pkg/custom-provider"
-	emprov "github.com/directxman12/k8s-prometheus-adapter/pkg/external-provider"
+	extprov "github.com/directxman12/k8s-prometheus-adapter/pkg/external-provider"
 	resprov "github.com/directxman12/k8s-prometheus-adapter/pkg/resourceprovider"
 )
 
@@ -141,13 +141,13 @@ func (cmd *PrometheusAdapter) makeExternalProvider(promClient prom.Client, stopC
 	}
 
 	// collect series converters for adapter
-	converters, errs := emprov.ConvertersFromConfig(cmd.metricsConfig, mapper)
+	converters, errs := extprov.ConvertersFromConfig(cmd.metricsConfig, mapper)
 	if len(errs) > 0 {
 		return nil, fmt.Errorf("unable to construct naming scheme from metrics rules: %v", errs)
 	}
 
 	// construct the provider and start it
-	emProvider, runner := emprov.NewExternalPrometheusProvider(mapper, promClient, converters, cmd.MetricsRelistInterval)
+	emProvider, runner := extprov.NewExternalPrometheusProvider(mapper, promClient, converters, cmd.MetricsRelistInterval)
 	runner.RunUntil(stopCh)
 
 	return emProvider, nil

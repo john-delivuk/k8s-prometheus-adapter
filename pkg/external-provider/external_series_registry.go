@@ -16,7 +16,7 @@ import (
 type ExternalSeriesRegistry interface {
 	// ListAllMetrics lists all metrics known to this registry
 	ListAllMetrics() []provider.ExternalMetricInfo
-	QueryForMetric(namespace string, metricName string, metricSelector labels.Selector) (query prom.Selector, found bool, err error)
+	QueryForMetric(namespace string, metricName string, metricSelector labels.Selector) (prom.Selector, bool, error)
 }
 
 // overridableSeriesRegistry is a basic SeriesRegistry
@@ -93,7 +93,7 @@ func (r *externalSeriesRegistry) ListAllMetrics() []provider.ExternalMetricInfo 
 	return r.metrics
 }
 
-func (r *externalSeriesRegistry) QueryForMetric(namespace string, metricName string, metricSelector labels.Selector) (query prom.Selector, found bool, err error) {
+func (r *externalSeriesRegistry) QueryForMetric(namespace string, metricName string, metricSelector labels.Selector) (prom.Selector, bool, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -104,6 +104,6 @@ func (r *externalSeriesRegistry) QueryForMetric(namespace string, metricName str
 		return "", false, nil
 	}
 
-	query, err = converter.QueryForExternalSeries(namespace, metricName, metricSelector)
+	query, err := converter.QueryForExternalSeries(namespace, metricName, metricSelector)
 	return query, found, err
 }
