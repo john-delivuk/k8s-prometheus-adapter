@@ -13,13 +13,15 @@ Per-pod HTTP Requests
 something like this*
 
 Suppose we have some frontend webserver, and we're trying to write a
-configuration for the Prometheus adapter so that we can autoscale it based on the HTTP requests per second that it receives.
+configuration for the Prometheus adapter so that we can autoscale it based
+on the HTTP requests per second that it receives.
 
 Before starting, we've gone and instrumented our frontend server with
 a metric, `http_requests_total`.  It is exposed with a single label,
 `method`, breaking down the requests by HTTP verb.
 
-We've configured our Prometheus to collect the metric, and it adds the `kubernetes_namespace` and `kubernetes_pod_name` labels,
+We've configured our Prometheus to collect the metric, and it
+adds the `kubernetes_namespace` and `kubernetes_pod_name` labels,
 representing namespace and pod, respectively.
 
 If we query Prometheus, we see series that look like

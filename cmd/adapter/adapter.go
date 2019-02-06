@@ -167,7 +167,6 @@ func (cmd *PrometheusAdapter) makeProvider(promClient prom.Client, stopCh <-chan
 
 	// construct the provider and start it
 	cmProvider, runner := cmprov.NewPrometheusProvider(mapper, dynClient, promClient, namers, cmd.MetricsRelistInterval, cmd.MetricsMaxAge)
-
 	runner.RunUntil(stopCh)
 
 	return cmProvider, nil
@@ -247,7 +246,6 @@ func main() {
 	cmd.Name = "prometheus-metrics-adapter"
 	cmd.addFlags()
 	cmd.Flags().AddGoFlagSet(flag.CommandLine) // make sure we get the glog flags
-	cmd.Flags().Parse(os.Args)
 	if err := cmd.Flags().Parse(os.Args); err != nil {
 		glog.Fatalf("unable to parse flags: %v", err)
 	}
