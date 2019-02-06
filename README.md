@@ -9,6 +9,13 @@ This repository contains an implementation of the Kubernetes
 This adapter is therefore suitable for use with the autoscaling/v2 Horizontal Pod Autoscaler in Kubernetes 1.6+.  
 It can also replace the [metrics server](https://github.com/kubernetes-incubator/metrics-server) on clusters that already run Prometheus and collect the appropriate metrics.
 
+Quick Links
+-----------
+
+- [Config walkthrough](docs/config-walkthrough.md) and [config reference](docs/config.md).
+- [End-to-end walkthrough](docs/walkthrough.md)
+- [Deployment info and files](deploy/README.md)
+
 Installation
 -------------
 If you're a helm user, a helm chart is listed on the Kubeapps Hub as [stable/prometheus-adapter](https://github.com/helm/charts/blob/master/stable/prometheus-adapter/README.md).
@@ -18,13 +25,13 @@ To install it with the release name `my-release`, run this Helm command:
 ```console
 $ helm install --name my-release stable/prometheus-adapter
 ```
-=======
 Quick Links
 -----------
 
 - [Config walkthrough](docs/config-walkthrough.md) and [config reference](docs/config.md).
 - [End-to-end walkthrough](docs/walkthrough.md)
 - [Deployment info and files](deploy/README.md)
+=======
 
 Configuration
 -------------
